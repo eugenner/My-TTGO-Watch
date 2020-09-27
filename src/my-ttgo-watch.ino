@@ -46,6 +46,7 @@
 #include "app/alarm_clock/alarm_clock.h"
 #include "app/crypto_ticker/crypto_ticker.h"
 #include "app/example_app/example_app.h"
+#include "app/my_app/my_app.h"
 #include "app/osmand/osmand_app.h"
 #include "app/IRController/IRController.h"
 #include "app/powermeter/powermeter_app.h"
@@ -103,6 +104,7 @@ void setup()
     alarm_clock_setup();
     crypto_ticker_setup();
     example_app_setup();
+    my_app_setup();
     osmand_app_setup();
     IRController_setup();
     powermeter_app_setup();

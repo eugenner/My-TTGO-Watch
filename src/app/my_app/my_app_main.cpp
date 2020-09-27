@@ -22,79 +22,79 @@
 #include "config.h"
 #include <TTGO.h>
 
-#include "example_app.h"
-#include "example_app_main.h"
+#include "my_app.h"
+#include "my_app_main.h"
 
 #include "gui/mainbar/app_tile/app_tile.h"
 #include "gui/mainbar/main_tile/main_tile.h"
 #include "gui/mainbar/mainbar.h"
 #include "gui/statusbar.h"
 
-lv_obj_t *example_app_main_tile = NULL;
-lv_style_t example_app_main_style;
+lv_obj_t *my_app_main_tile = NULL;
+lv_style_t my_app_main_style;
 
-lv_task_t * _example_app_task;
+lv_task_t * _my_app_task;
 
 LV_IMG_DECLARE(exit_32px);
 LV_IMG_DECLARE(setup_32px);
 LV_IMG_DECLARE(refresh_32px);
 LV_FONT_DECLARE(Ubuntu_72px);
 
-static void exit_example_app_main_event_cb( lv_obj_t * obj, lv_event_t event );
-static void enter_example_app_setup_event_cb( lv_obj_t * obj, lv_event_t event );
-void example_app_task( lv_task_t * task );
+static void exit_my_app_main_event_cb( lv_obj_t * obj, lv_event_t event );
+static void enter_my_app_setup_event_cb( lv_obj_t * obj, lv_event_t event );
+void my_app_task( lv_task_t * task );
 
-void example_app_main_setup( uint32_t tile_num ) {
+void my_app_main_setup( uint32_t tile_num ) {
 
-    example_app_main_tile = mainbar_get_tile_obj( tile_num );
-    lv_style_copy( &example_app_main_style, mainbar_get_style() );
+    my_app_main_tile = mainbar_get_tile_obj( tile_num );
+    lv_style_copy( &my_app_main_style, mainbar_get_style() );
 
-    lv_obj_t * exit_btn = lv_imgbtn_create( example_app_main_tile, NULL);
+    lv_obj_t * exit_btn = lv_imgbtn_create( my_app_main_tile, NULL);
     lv_imgbtn_set_src(exit_btn, LV_BTN_STATE_RELEASED, &exit_32px);
     lv_imgbtn_set_src(exit_btn, LV_BTN_STATE_PRESSED, &exit_32px);
     lv_imgbtn_set_src(exit_btn, LV_BTN_STATE_CHECKED_RELEASED, &exit_32px);
     lv_imgbtn_set_src(exit_btn, LV_BTN_STATE_CHECKED_PRESSED, &exit_32px);
-    lv_obj_add_style(exit_btn, LV_IMGBTN_PART_MAIN, &example_app_main_style );
-    lv_obj_align(exit_btn, example_app_main_tile, LV_ALIGN_IN_BOTTOM_LEFT, 10, -10 );
-    lv_obj_set_event_cb( exit_btn, exit_example_app_main_event_cb );
+    lv_obj_add_style(exit_btn, LV_IMGBTN_PART_MAIN, &my_app_main_style );
+    lv_obj_align(exit_btn, my_app_main_tile, LV_ALIGN_IN_BOTTOM_LEFT, 10, -10 );
+    lv_obj_set_event_cb( exit_btn, exit_my_app_main_event_cb );
 
-    lv_obj_t * setup_btn = lv_imgbtn_create( example_app_main_tile, NULL);
+    lv_obj_t * setup_btn = lv_imgbtn_create( my_app_main_tile, NULL);
     lv_imgbtn_set_src(setup_btn, LV_BTN_STATE_RELEASED, &setup_32px);
     lv_imgbtn_set_src(setup_btn, LV_BTN_STATE_PRESSED, &setup_32px);
     lv_imgbtn_set_src(setup_btn, LV_BTN_STATE_CHECKED_RELEASED, &setup_32px);
     lv_imgbtn_set_src(setup_btn, LV_BTN_STATE_CHECKED_PRESSED, &setup_32px);
-    lv_obj_add_style(setup_btn, LV_IMGBTN_PART_MAIN, &example_app_main_style );
-    lv_obj_align(setup_btn, example_app_main_tile, LV_ALIGN_IN_BOTTOM_RIGHT, -10, -10 );
-    lv_obj_set_event_cb( setup_btn, enter_example_app_setup_event_cb );
+    lv_obj_add_style(setup_btn, LV_IMGBTN_PART_MAIN, &my_app_main_style );
+    lv_obj_align(setup_btn, my_app_main_tile, LV_ALIGN_IN_BOTTOM_RIGHT, -10, -10 );
+    lv_obj_set_event_cb( setup_btn, enter_my_app_setup_event_cb );
 
     // uncomment the following block of code to remove the "myapp" label in background
-    lv_style_set_text_opa( &example_app_main_style, LV_OBJ_PART_MAIN, LV_OPA_70);
-    lv_style_set_text_font( &example_app_main_style, LV_STATE_DEFAULT, &Ubuntu_72px);
-    lv_obj_t *app_label = lv_label_create( example_app_main_tile, NULL);
-    lv_label_set_text( app_label, "my app");
+    lv_style_set_text_opa( &my_app_main_style, LV_OBJ_PART_MAIN, LV_OPA_70);
+    lv_style_set_text_font( &my_app_main_style, LV_STATE_DEFAULT, &Ubuntu_72px);
+    lv_obj_t *app_label = lv_label_create( my_app_main_tile, NULL);
+    lv_label_set_text( app_label, "my app 2");
     lv_obj_reset_style_list( app_label, LV_OBJ_PART_MAIN );
-    lv_obj_add_style( app_label, LV_OBJ_PART_MAIN, &example_app_main_style );
-    lv_obj_align( app_label, example_app_main_tile, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_add_style( app_label, LV_OBJ_PART_MAIN, &my_app_main_style );
+    lv_obj_align( app_label, my_app_main_tile, LV_ALIGN_CENTER, 0, 0);
 
     // create an task that runs every secound
-    _example_app_task = lv_task_create( example_app_task, 1000, LV_TASK_PRIO_MID, NULL );
+    _my_app_task = lv_task_create( my_app_task, 1000, LV_TASK_PRIO_MID, NULL );
 }
 
-static void enter_example_app_setup_event_cb( lv_obj_t * obj, lv_event_t event ) {
+static void enter_my_app_setup_event_cb( lv_obj_t * obj, lv_event_t event ) {
     switch( event ) {
         case( LV_EVENT_CLICKED ):       statusbar_hide( true );
-                                        mainbar_jump_to_tilenumber( example_app_get_app_setup_tile_num(), LV_ANIM_ON );
+                                        mainbar_jump_to_tilenumber( my_app_get_app_setup_tile_num(), LV_ANIM_ON );
                                         break;
     }
 }
 
-static void exit_example_app_main_event_cb( lv_obj_t * obj, lv_event_t event ) {
+static void exit_my_app_main_event_cb( lv_obj_t * obj, lv_event_t event ) {
     switch( event ) {
         case( LV_EVENT_CLICKED ):       mainbar_jump_to_maintile( LV_ANIM_OFF );
                                         break;
     }
 }
 
-void example_app_task( lv_task_t * task ) {
+void my_app_task( lv_task_t * task ) {
     // put your code her
 }

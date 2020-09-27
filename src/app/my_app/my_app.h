@@ -19,15 +19,15 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-#ifndef _EXAMPLE_APP_H
-    #define _EXAMPLE_APP_H
+#ifndef _MY_APP_H
+    #define _MY_APP_H
 
     #include <TTGO.h>
 
-    #define EXAMPLE_WIDGET    // uncomment if an widget need
+    #define MY_WIDGET    // uncomment if an widget need
 
-    void example_app_setup( void );
-    uint32_t example_app_get_app_setup_tile_num( void );
-    uint32_t example_app_get_app_main_tile_num( void );
+    void my_app_setup( void );
+    uint32_t my_app_get_app_setup_tile_num( void );
+    uint32_t my_app_get_app_main_tile_num( void );
 
-#endif // _EXAMPLE_APP_H
+#endif // _MY_APP_H
