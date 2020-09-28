@@ -38,10 +38,13 @@ lv_task_t * _my_app_task;
 LV_IMG_DECLARE(exit_32px);
 LV_IMG_DECLARE(setup_32px);
 LV_IMG_DECLARE(refresh_32px);
+LV_FONT_DECLARE(Ubuntu_16px);
 LV_FONT_DECLARE(Ubuntu_72px);
 
 static void exit_my_app_main_event_cb( lv_obj_t * obj, lv_event_t event );
 static void enter_my_app_setup_event_cb( lv_obj_t * obj, lv_event_t event );
+static void command_btn_event_cb( lv_obj_t * obj, lv_event_t event );
+
 void my_app_task( lv_task_t * task );
 
 void my_app_main_setup( uint32_t tile_num ) {
@@ -68,16 +71,45 @@ void my_app_main_setup( uint32_t tile_num ) {
     lv_obj_set_event_cb( setup_btn, enter_my_app_setup_event_cb );
 
     // uncomment the following block of code to remove the "myapp" label in background
-    lv_style_set_text_opa( &my_app_main_style, LV_OBJ_PART_MAIN, LV_OPA_70);
-    lv_style_set_text_font( &my_app_main_style, LV_STATE_DEFAULT, &Ubuntu_72px);
+    lv_style_set_text_opa( &my_app_main_style, LV_OBJ_PART_MAIN, LV_OPA_100);
+    lv_style_set_text_font( &my_app_main_style, LV_STATE_DEFAULT, &Ubuntu_16px);
     lv_obj_t *app_label = lv_label_create( my_app_main_tile, NULL);
-    lv_label_set_text( app_label, "my app 2");
+    lv_label_set_text( app_label, "my app");
     lv_obj_reset_style_list( app_label, LV_OBJ_PART_MAIN );
     lv_obj_add_style( app_label, LV_OBJ_PART_MAIN, &my_app_main_style );
-    lv_obj_align( app_label, my_app_main_tile, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_align( app_label, my_app_main_tile, LV_ALIGN_IN_TOP_LEFT, 0, 0);
+
+    // command button
+    // lv_obj_t * command_btn = lv_imgbtn_create( my_app_main_tile, NULL);
+    // lv_imgbtn_set_src(command_btn, LV_BTN_STATE_RELEASED, &info_1_16px);
+    // lv_imgbtn_set_src(command_btn, LV_BTN_STATE_PRESSED, &info_1_16px);
+    // lv_imgbtn_set_src(command_btn, LV_BTN_STATE_CHECKED_RELEASED, &info_1_16px);
+    // lv_imgbtn_set_src(command_btn, LV_BTN_STATE_CHECKED_PRESSED, &info_1_16px);
+    // lv_obj_add_style(command_btn, LV_IMGBTN_PART_MAIN, &my_app_main_style );
+    // lv_obj_align(command_btn, my_app_main_tile, LV_ALIGN_OUT_TOP_LEFT, 0, 50 );
+    // TODO
+    // lv_obj_set_event_cb( setup_btn, enter_my_app_setup_event_cb );
+
+
+    lv_obj_t *command_btn = lv_btn_create(my_app_main_tile, NULL);  
+    lv_obj_set_size(command_btn, 50, 50);
+    lv_obj_add_style(command_btn, LV_BTN_PART_MAIN, mainbar_get_button_style() );
+    lv_obj_align( command_btn, NULL, LV_ALIGN_CENTER, -80, -30 );
+    lv_obj_set_event_cb( command_btn, command_btn_event_cb );
+
+    lv_obj_t *command_btn_label = lv_label_create(command_btn, NULL);
+    lv_label_set_text(command_btn_label, LV_SYMBOL_PLAY);
+
 
     // create an task that runs every secound
     _my_app_task = lv_task_create( my_app_task, 1000, LV_TASK_PRIO_MID, NULL );
+}
+
+static void command_btn_event_cb( lv_obj_t * obj, lv_event_t event ) {
+    switch( event ) {
+        case( LV_EVENT_CLICKED ):       log_i("command_btn clicked");
+                                        break;
+    }
 }
 
 static void enter_my_app_setup_event_cb( lv_obj_t * obj, lv_event_t event ) {
