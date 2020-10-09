@@ -71,7 +71,7 @@ void example_app_main_setup( uint32_t tile_num ) {
     lv_style_set_text_opa( &example_app_main_style, LV_OBJ_PART_MAIN, LV_OPA_70);
     lv_style_set_text_font( &example_app_main_style, LV_STATE_DEFAULT, &Ubuntu_72px);
     lv_obj_t *app_label = lv_label_create( example_app_main_tile, NULL);
-    lv_label_set_text( app_label, "my app");
+    lv_label_set_text( app_label, "ex app");
     lv_obj_reset_style_list( app_label, LV_OBJ_PART_MAIN );
     lv_obj_add_style( app_label, LV_OBJ_PART_MAIN, &example_app_main_style );
     lv_obj_align( app_label, example_app_main_tile, LV_ALIGN_CENTER, 0, 0);

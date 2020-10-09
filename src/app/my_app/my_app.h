@@ -26,8 +26,20 @@
 
     #define MY_WIDGET    // uncomment if an widget need
 
+    #define MY_APP_JSON_CONFIG_FILE        "/my-app.json"
+
+
+    typedef struct {
+            char url[100] = "";
+            char url2[100] = "";
+            char url3[100] = "";
+        } my_app_config_t;
+
     void my_app_setup( void );
+    my_app_config_t *my_app_get_config( void );
+
     uint32_t my_app_get_app_setup_tile_num( void );
     uint32_t my_app_get_app_main_tile_num( void );
 
+    void my_app_save_config( void );
 #endif // _MY_APP_H

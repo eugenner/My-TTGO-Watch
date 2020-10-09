@@ -31,6 +31,11 @@
 #include "gui/app.h"
 #include "gui/widget.h"
 
+#include "hardware/json_psram_allocator.h"
+
+my_app_config_t my_app_config;
+
+
 uint32_t my_app_main_tile_num;
 uint32_t my_app_setup_tile_num;
 
@@ -48,10 +53,13 @@ LV_IMG_DECLARE(info_1_16px);
 static void enter_my_app_event_cb( lv_obj_t * obj, lv_event_t event );
 static void enter_my_widget_event_cb( lv_obj_t * obj, lv_event_t event );
 
+void my_app_load_config( void );
 /*
  * setup routine for my app
  */
 void my_app_setup( void ) {
+
+    my_app_load_config();
     // register 2 vertical tiles and get the first tile number and save it for later use
     my_app_main_tile_num = mainbar_add_app_tile( 1, 2, "my app" );
     my_app_setup_tile_num = my_app_main_tile_num + 1;
@@ -115,4 +123,60 @@ static void enter_my_widget_event_cb( lv_obj_t * obj, lv_event_t event ) {
                                         mainbar_jump_to_tilenumber( my_app_main_tile_num, LV_ANIM_OFF );
                                         break;
     }    
+}
+
+my_app_config_t *my_app_get_config( void ) {
+    return( &my_app_config );
+}
+
+
+/*
+ *
+ */
+void my_app_save_config( void ) {
+  
+
+    fs::File file = SPIFFS.open( MY_APP_JSON_CONFIG_FILE, FILE_WRITE );
+
+    if (!file) {
+        log_e("Can't open file: %s!", MY_APP_JSON_CONFIG_FILE );
+    }
+    else {
+        SpiRamJsonDocument doc( 1000 );
+
+        doc["url"] = my_app_config.url;
+
+        if ( serializeJsonPretty( doc, file ) == 0) {
+            log_e("Failed to write config file");
+        }
+        doc.clear();
+    }
+    file.close();
+}
+
+/*
+ *
+ */
+void my_app_load_config( void ) {
+    if ( SPIFFS.exists( MY_APP_JSON_CONFIG_FILE ) ) {        
+        fs::File file = SPIFFS.open( MY_APP_JSON_CONFIG_FILE, FILE_READ );
+        if (!file) {
+            log_e("Can't open file: %s!", MY_APP_JSON_CONFIG_FILE );
+        }
+        else {
+            int filesize = file.size();
+            SpiRamJsonDocument doc( filesize * 2 );
+
+            DeserializationError error = deserializeJson( doc, file );
+            if ( error ) {
+                log_e("update check deserializeJson() failed: %s", error.c_str() );
+            }
+            else {
+                strlcpy( my_app_config.url, doc["url"], sizeof( my_app_config.url) );
+            }        
+            doc.clear();
+        }
+        file.close();
+    }
+
 }

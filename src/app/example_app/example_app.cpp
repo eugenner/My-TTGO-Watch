@@ -70,7 +70,7 @@ void example_app_setup( void ) {
     // remember, an widget icon must have an max size of 64x64 pixel
     // use https://lvgl.io/tools/imageconverter to convert your images and set "true color with alpha" to get fancy images
     // the resulting c-file can put in /app/examples/images/ and declare it like LV_IMG_DECLARE( your_icon );
-    example_widget = widget_register( "my app", &example_app_64px, enter_example_widget_event_cb );
+    example_widget = widget_register( "ex app", &example_app_64px, enter_example_widget_event_cb );
     widget_set_indicator( example_widget, ICON_INDICATOR_UPDATE );
 #endif // EXAMPLE_WIDGET
 

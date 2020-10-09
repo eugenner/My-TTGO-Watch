@@ -27,21 +27,28 @@
 
 #include "gui/mainbar/mainbar.h"
 #include "gui/statusbar.h"
+#include "gui/keyboard.h"
 
 lv_obj_t *my_app_setup_tile = NULL;
 lv_style_t my_app_setup_style;
 
 lv_obj_t *my_app_foobar_switch = NULL;
+lv_obj_t *url_textarea = NULL;
+lv_obj_t *url_textarea2 = NULL;
+lv_obj_t *url_textarea3 = NULL;
 
 LV_IMG_DECLARE(exit_32px);
 
 static void exit_my_app_setup_event_cb( lv_obj_t * obj, lv_event_t event );
 static void my_app_foobar_switch_event_cb( lv_obj_t * obj, lv_event_t event );
+static void my_app_textarea_event_cb( lv_obj_t * obj, lv_event_t event );
 
 void my_app_setup_setup( uint32_t tile_num ) {
 
     my_app_setup_tile = mainbar_get_tile_obj( tile_num );
     lv_style_copy( &my_app_setup_style, mainbar_get_style() );
+
+    my_app_config_t * my_app_config = my_app_get_config();
 
     lv_style_set_bg_color( &my_app_setup_style, LV_OBJ_PART_MAIN, LV_COLOR_GRAY);
     lv_style_set_bg_opa( &my_app_setup_style, LV_OBJ_PART_MAIN, LV_OPA_100);
@@ -67,22 +74,69 @@ void my_app_setup_setup( uint32_t tile_num ) {
     lv_label_set_text( exit_label, "my app setup");
     lv_obj_align( exit_label, exit_btn, LV_ALIGN_OUT_RIGHT_MID, 5, 0 );
 
-    lv_obj_t *my_app_foobar_switch_cont = lv_obj_create( my_app_setup_tile, NULL );
-    lv_obj_set_size( my_app_foobar_switch_cont, lv_disp_get_hor_res( NULL ) , 40);
-    lv_obj_add_style( my_app_foobar_switch_cont, LV_OBJ_PART_MAIN, &my_app_setup_style  );
-    lv_obj_align( my_app_foobar_switch_cont, exit_cont, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0 );
+    // lv_obj_t *my_app_foobar_switch_cont = lv_obj_create( my_app_setup_tile, NULL );
+    // lv_obj_set_size( my_app_foobar_switch_cont, lv_disp_get_hor_res( NULL ) , 40);
+    // lv_obj_add_style( my_app_foobar_switch_cont, LV_OBJ_PART_MAIN, &my_app_setup_style  );
+    // lv_obj_align( my_app_foobar_switch_cont, exit_cont, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0 );
 
-    my_app_foobar_switch = lv_switch_create( my_app_foobar_switch_cont, NULL );
-    lv_obj_add_protect( my_app_foobar_switch, LV_PROTECT_CLICK_FOCUS);
-    lv_obj_add_style( my_app_foobar_switch, LV_SWITCH_PART_INDIC, mainbar_get_switch_style() );
-    lv_switch_off( my_app_foobar_switch, LV_ANIM_ON );
-    lv_obj_align( my_app_foobar_switch, my_app_foobar_switch_cont, LV_ALIGN_IN_RIGHT_MID, -5, 0 );
-    lv_obj_set_event_cb( my_app_foobar_switch, my_app_foobar_switch_event_cb );
+    // my_app_foobar_switch = lv_switch_create( my_app_foobar_switch_cont, NULL );
+    // lv_obj_add_protect( my_app_foobar_switch, LV_PROTECT_CLICK_FOCUS);
+    // lv_obj_add_style( my_app_foobar_switch, LV_SWITCH_PART_INDIC, mainbar_get_switch_style() );
+    // lv_switch_off( my_app_foobar_switch, LV_ANIM_ON );
+    // lv_obj_align( my_app_foobar_switch, my_app_foobar_switch_cont, LV_ALIGN_IN_RIGHT_MID, -5, 0 );
+    // lv_obj_set_event_cb( my_app_foobar_switch, my_app_foobar_switch_event_cb );
 
-    lv_obj_t *my_app_foobar_switch_label = lv_label_create( my_app_foobar_switch_cont, NULL);
+
+
+    // url 1 set field 
+    lv_obj_t *my_app_foobar_switch_label = lv_label_create( my_app_setup_tile, NULL);
     lv_obj_add_style( my_app_foobar_switch_label, LV_OBJ_PART_MAIN, &my_app_setup_style  );
-    lv_label_set_text( my_app_foobar_switch_label, "foo bar");
-    lv_obj_align( my_app_foobar_switch_label, my_app_foobar_switch_cont, LV_ALIGN_IN_LEFT_MID, 5, 0 );
+    lv_label_set_text( my_app_foobar_switch_label, "url1:");
+    lv_obj_align( my_app_foobar_switch_label, my_app_setup_tile, LV_ALIGN_IN_TOP_LEFT, 0, 50 );
+
+    url_textarea = lv_textarea_create( my_app_setup_tile, NULL);
+    lv_textarea_set_pwd_mode( url_textarea, false);
+    lv_textarea_set_one_line( url_textarea, true);
+    lv_textarea_set_cursor_hidden( url_textarea, true);
+    lv_obj_set_width( url_textarea, LV_HOR_RES);
+    lv_textarea_set_text( url_textarea, my_app_config->url );
+    // lv_obj_align( url_textarea, my_app_setup_tile, LV_ALIGN_IN_TOP_MID, 0, 70 );
+    lv_obj_align( url_textarea, my_app_foobar_switch_label, LV_ALIGN_IN_TOP_LEFT, 0, 20 );
+    lv_obj_set_event_cb( url_textarea, my_app_textarea_event_cb );
+
+    // url 2 set field 
+    lv_obj_t *my_app_foobar_switch_label2 = lv_label_create( my_app_setup_tile, NULL);
+    lv_obj_add_style( my_app_foobar_switch_label2, LV_OBJ_PART_MAIN, &my_app_setup_style  );
+    lv_label_set_text( my_app_foobar_switch_label2, "url2:");
+    // lv_obj_align( my_app_foobar_switch_label2, my_app_setup_tile, LV_ALIGN_IN_TOP_LEFT, 0, 100 );
+    lv_obj_align( my_app_foobar_switch_label2, url_textarea, LV_ALIGN_IN_TOP_LEFT, 0, 40 );
+
+    url_textarea2 = lv_textarea_create( my_app_setup_tile, NULL);
+    lv_textarea_set_pwd_mode( url_textarea2, false);
+    lv_textarea_set_one_line( url_textarea2, true);
+    lv_textarea_set_cursor_hidden( url_textarea2, true);
+    lv_obj_set_width( url_textarea2, LV_HOR_RES);
+    lv_textarea_set_text( url_textarea2, my_app_config->url2 );
+    // lv_obj_align( url_textarea2, my_app_setup_tile, LV_ALIGN_IN_TOP_MID, 0, 120 );
+    lv_obj_align( url_textarea2, my_app_foobar_switch_label2, LV_ALIGN_IN_TOP_LEFT, 0, 20 );
+    lv_obj_set_event_cb( url_textarea2, my_app_textarea_event_cb );
+
+    // url 3 set field 
+    lv_obj_t *my_app_foobar_switch_label3 = lv_label_create( my_app_setup_tile, NULL);
+    lv_obj_add_style( my_app_foobar_switch_label3, LV_OBJ_PART_MAIN, &my_app_setup_style  );
+    lv_label_set_text( my_app_foobar_switch_label3, "url3:");
+    // lv_obj_align( my_app_foobar_switch_label3, my_app_setup_tile, LV_ALIGN_IN_TOP_LEFT, 0, 150 );
+    lv_obj_align( my_app_foobar_switch_label3, url_textarea2, LV_ALIGN_IN_TOP_LEFT, 0, 40 );
+
+    url_textarea3 = lv_textarea_create( my_app_setup_tile, NULL);
+    lv_textarea_set_pwd_mode( url_textarea3, false);
+    lv_textarea_set_one_line( url_textarea3, true);
+    lv_textarea_set_cursor_hidden( url_textarea3, true);
+    lv_obj_set_width( url_textarea3, LV_HOR_RES);
+    lv_textarea_set_text( url_textarea3, my_app_config->url3 );
+    // lv_obj_align( url_textarea3, my_app_setup_tile, LV_ALIGN_IN_TOP_MID, 0, 170 );
+    lv_obj_align( url_textarea3, my_app_foobar_switch_label3, LV_ALIGN_IN_TOP_LEFT, 0, 20 );
+    lv_obj_set_event_cb( url_textarea3, my_app_textarea_event_cb );       
 }
 
 static void my_app_foobar_switch_event_cb( lv_obj_t * obj, lv_event_t event ) {
@@ -92,9 +146,23 @@ static void my_app_foobar_switch_event_cb( lv_obj_t * obj, lv_event_t event ) {
     }
 }
 
+static void my_app_textarea_event_cb( lv_obj_t * obj, lv_event_t event ) {
+    if( event == LV_EVENT_CLICKED ) {
+        keyboard_set_textarea( obj );
+    }
+}
+
 static void exit_my_app_setup_event_cb( lv_obj_t * obj, lv_event_t event ) {
     switch( event ) {
-        case( LV_EVENT_CLICKED ):       mainbar_jump_to_tilenumber( my_app_get_app_main_tile_num(), LV_ANIM_ON );
+        case( LV_EVENT_CLICKED ):       
+                                        keyboard_hide();
+                                        my_app_config_t *my_app_config = my_app_get_config();
+                                        strlcpy( my_app_config->url, lv_textarea_get_text( url_textarea ), sizeof( my_app_config->url ) );
+                                        strlcpy( my_app_config->url2, lv_textarea_get_text( url_textarea2 ), sizeof( my_app_config->url2 ) );
+                                        strlcpy( my_app_config->url3, lv_textarea_get_text( url_textarea3 ), sizeof( my_app_config->url3 ) );
+                                        my_app_save_config();
+                                        statusbar_hide( true );
+                                        mainbar_jump_to_tilenumber( my_app_get_app_main_tile_num(), LV_ANIM_ON );
                                         break;
     }
 }
