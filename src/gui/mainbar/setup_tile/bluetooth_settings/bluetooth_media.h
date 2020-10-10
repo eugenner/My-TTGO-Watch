@@ -1,8 +1,9 @@
 /****************************************************************************
- *   Copyright  2020  Jakub Vesely
- *   Email: jakub_vesely@seznam.cz
+ *   Oct 05 23:05:42 2020
+ *   Copyright  2020  Dirk Brosswick
+ *   Email: dirk.brosswick@googlemail.com
  ****************************************************************************/
-
+ 
 /*
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,19 +19,11 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+#ifndef _BLUETOOTH_MEDIA_H
+    #define _BLUETOOTH_MEDIA_H
 
-#pragma once
-#include <stdint.h>
+    #include <TTGO.h>
 
-void alarm_set_term(uint8_t hour, uint8_t minute);
-uint8_t alarm_get_hour();
-uint8_t alarm_get_minute();
-void alarm_set_enabled(bool enable);
-bool alarm_is_enabled();
-void alarm_set_vibe_allowed(bool _vibe);
-bool alarm_is_vibe_allowed();
-void alarm_set_fade_allowed(bool _fade);
-bool alarm_is_fade_allowed();
-bool alarm_is_time();
-void alarm_setup();
-void alarm_data_store_data(bool enabled);
+    void bluetooth_media_tile_setup( void );
+
+#endif // _BLUETOOTH_MEDIA_H

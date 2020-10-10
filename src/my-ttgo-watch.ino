@@ -40,6 +40,7 @@
 #include "hardware/timesync.h"
 #include "hardware/sound.h"
 #include "hardware/framebuffer.h"
+#include "hardware/callback.h"
 
 #include "app/weather/weather.h"
 #include "app/stopwatch/stopwatch_app.h"
@@ -87,8 +88,6 @@ void setup()
         }
     }
 
-    splash_screen_stage_update( "init rtc", 50 );
-    timesyncToSystem();
     splash_screen_stage_update( "init powermgm", 60 );
     powermgm_setup();
     splash_screen_stage_update( "init gui", 80 );
@@ -129,6 +128,7 @@ void setup()
     Serial.printf("Free PSRAM: %d\r\n", ESP.getFreePsram());
 
     disableCore0WDT();
+    callback_print();
 }
 
 void loop() {

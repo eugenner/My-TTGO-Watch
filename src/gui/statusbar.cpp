@@ -263,7 +263,11 @@ void statusbar_setup( void )
     statusbar_hide_icon( STATUSBAR_WARNING );
     statusbar_hide_icon( STATUSBAR_WIFI );
     statusbar_hide_icon( STATUSBAR_BLUETOOTH );
-    statusbar_hide_icon( STATUSBAR_ALARM );
+    if (rtcctl_get_alarm_data()->enabled){
+        statusbar_show_icon( STATUSBAR_ALARM );
+    } else{
+        statusbar_hide_icon( STATUSBAR_ALARM );
+    }
     statusbar_hide_icon( STATUSBAR_VOLUME );
     statusbar_style_icon( STATUSBAR_BLUETOOTH, STATUSBAR_STYLE_GRAY );
 
@@ -355,7 +359,7 @@ bool statusbar_pmuctl_event_cb( EventBits_t event, void *arg ) {
                                             statusbar_style_icon( STATUSBAR_BATTERY, STATUSBAR_STYLE_RED );
                                         }
                                         else {
-                                            statusbar_style_icon( STATUSBAR_BATTERY, STATUSBAR_STYLE_GREEN );
+                                            statusbar_style_icon( STATUSBAR_BATTERY, STATUSBAR_STYLE_WHITE );
                                         }
                                         break;
         case PMUCTL_VBUS_PLUG:          if ( *(bool*)arg ) {
@@ -479,9 +483,11 @@ void statusbar_brightness_slider_event_handler_cb(lv_obj_t *brightness_slider, l
 void statusbar_wifi_event_cb( lv_obj_t *wifi, lv_event_t event ) {
     if ( event == LV_EVENT_VALUE_CHANGED ) {
         switch ( lv_imgbtn_get_state( wifi ) ) {
-            case( LV_BTN_STATE_CHECKED_RELEASED ):  wifictl_off(); 
+            case( LV_BTN_STATE_CHECKED_RELEASED ):  wifictl_off();
+                                                    wifictl_set_autoon( false );
                                                     break;
             case( LV_BTN_STATE_RELEASED ):          wifictl_on();
+                                                    wifictl_set_autoon( true );
                                                     break;
         }
     }
@@ -567,31 +573,40 @@ void statusbar_event( lv_obj_t * statusbar, lv_event_t event ) {
 
     switch( event ) {
         case LV_EVENT_PRESSED:
-            if ( !expand ) {
-                lv_obj_set_height( statusbar, STATUSBAR_EXPAND_HEIGHT );
-                lv_style_set_bg_opa(&statusbarstyle[ STATUSBAR_STYLE_NORMAL ], LV_OBJ_PART_MAIN, LV_OPA_50);
-                lv_obj_reset_style_list( statusbar, LV_OBJ_PART_MAIN );
-                lv_obj_add_style( statusbar, LV_OBJ_PART_MAIN, &statusbarstyle[ STATUSBAR_STYLE_NORMAL ] );
-                expand = true;
+            if ( expand ) {
+                statusbar_expand( false );
+                expand = false;
             } 
             else {
-                lv_obj_set_height( statusbar, STATUSBAR_HEIGHT );
-                lv_style_set_bg_opa(&statusbarstyle[ STATUSBAR_STYLE_NORMAL ], LV_OBJ_PART_MAIN, LV_OPA_20);
-                lv_obj_reset_style_list( statusbar, LV_OBJ_PART_MAIN );
-                lv_obj_add_style( statusbar, LV_OBJ_PART_MAIN, &statusbarstyle[ STATUSBAR_STYLE_NORMAL ] );
-                expand = false;
-                //Save config here if anything has changed
-                if( should_save_brightness_config ){
-                    display_save_config();
-                    should_save_brightness_config = false;
-                }
-                if( should_save_sound_config ){
-                    sound_save_config();
-                    should_save_sound_config = false;
-                }
+                statusbar_expand( true );
+                expand = true;
             }
         default:
             break;
+    }
+}
+
+void statusbar_expand( bool expand ) {
+    if ( expand ) {
+        lv_obj_set_height( statusbar, STATUSBAR_EXPAND_HEIGHT );
+        lv_style_set_bg_opa(&statusbarstyle[ STATUSBAR_STYLE_NORMAL ], LV_OBJ_PART_MAIN, LV_OPA_50);
+        lv_obj_reset_style_list( statusbar, LV_OBJ_PART_MAIN );
+        lv_obj_add_style( statusbar, LV_OBJ_PART_MAIN, &statusbarstyle[ STATUSBAR_STYLE_NORMAL ] );
+    } 
+    else {
+        lv_obj_set_height( statusbar, STATUSBAR_HEIGHT );
+        lv_style_set_bg_opa(&statusbarstyle[ STATUSBAR_STYLE_NORMAL ], LV_OBJ_PART_MAIN, LV_OPA_20);
+        lv_obj_reset_style_list( statusbar, LV_OBJ_PART_MAIN );
+        lv_obj_add_style( statusbar, LV_OBJ_PART_MAIN, &statusbarstyle[ STATUSBAR_STYLE_NORMAL ] );
+        //Save config here if anything has changed
+        if( should_save_brightness_config ){
+            display_save_config();
+            should_save_brightness_config = false;
+        }
+        if( should_save_sound_config ){
+            sound_save_config();
+            should_save_sound_config = false;
+        }
     }
 }
 

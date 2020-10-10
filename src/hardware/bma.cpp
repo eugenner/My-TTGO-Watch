@@ -20,6 +20,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 #include "config.h"
+#include <stdio.h>
+#include <time.h>
 #include <TTGO.h>
 #include <soc/rtc.h>
 
@@ -27,6 +29,7 @@
 #include "powermgm.h"
 #include "callback.h"
 #include "json_psram_allocator.h"
+#include "alloc.h"
 
 #include "gui/statusbar.h"
 
@@ -36,6 +39,9 @@ portMUX_TYPE DRAM_ATTR BMA_IRQ_Mux = portMUX_INITIALIZER_UNLOCKED;
 __NOINIT_ATTR uint32_t stepcounter_valid;
 __NOINIT_ATTR uint32_t stepcounter_before_reset;
 __NOINIT_ATTR uint32_t stepcounter;
+
+static char bma_date[16];
+static char bma_old_date[16];
 
 bma_config_t bma_config[ BMA_CONFIG_NUM ];
 callback_t *bma_callback = NULL;
@@ -97,11 +103,17 @@ bool bma_powermgm_loop_cb( EventBits_t event , void *arg ) {
 
 void bma_standby( void ) {
     TTGOClass *ttgo = TTGOClass::getWatch();
+    time_t now;
+    tm info;
 
     log_i("go standby");
 
     if ( bma_get_config( BMA_STEPCOUNTER ) )
         ttgo->bma->enableStepCountInterrupt( false );
+
+    time( &now );
+    localtime_r( &now, &info );
+    strftime( bma_old_date, sizeof( bma_old_date ), "%d.%b", &info );
 
     gpio_wakeup_enable ( (gpio_num_t)BMA423_INT1, GPIO_INTR_HIGH_LEVEL );
     esp_sleep_enable_gpio_wakeup ();
@@ -109,11 +121,24 @@ void bma_standby( void ) {
 
 void bma_wakeup( void ) {
     TTGOClass *ttgo = TTGOClass::getWatch();
+    time_t now;
+    tm info;
 
     log_i("go wakeup");
 
     if ( bma_get_config( BMA_STEPCOUNTER ) )
         ttgo->bma->enableStepCountInterrupt( true );
+
+    time( &now );
+    localtime_r( &now, &info );
+    strftime( bma_date, sizeof( bma_date ), "%d.%b", &info );
+    if ( strcmp( bma_date, bma_old_date ) ) {
+        if ( bma_get_config( BMA_DAILY_STEPCOUNTER ) ) {
+            log_i("reset setcounter: %s != %s", bma_date, bma_old_date );
+            ttgo->bma->resetStepCounter();
+            strftime( bma_old_date, sizeof( bma_old_date ), "%d.%b", &info );
+        }
+    }
 
     first_loop_run = true;
 }
@@ -135,6 +160,7 @@ void IRAM_ATTR bma_irq( void ) {
 
 void bma_loop( void ) {
     TTGOClass *ttgo = TTGOClass::getWatch();
+
     /*
      * handle IRQ event
      */
@@ -188,11 +214,6 @@ bool bma_send_event_cb( EventBits_t event, void *arg ) {
 }
 
 void bma_save_config( void ) {
-    if ( SPIFFS.exists( BMA_COFIG_FILE ) ) {
-        SPIFFS.remove( BMA_COFIG_FILE );
-        log_i("remove old binary bma config");
-    }
-
     fs::File file = SPIFFS.open( BMA_JSON_COFIG_FILE, FILE_WRITE );
 
     if (!file) {
@@ -204,6 +225,7 @@ void bma_save_config( void ) {
         doc["stepcounter"] = bma_config[ BMA_STEPCOUNTER ].enable;
         doc["doubleclick"] = bma_config[ BMA_DOUBLECLICK ].enable;
         doc["tilt"] = bma_config[ BMA_TILT ].enable;
+        doc["daily_stepcounter"] = bma_config[ BMA_DAILY_STEPCOUNTER ].enable;
 
         if ( serializeJsonPretty( doc, file ) == 0) {
             log_e("Failed to write config file");
@@ -214,49 +236,27 @@ void bma_save_config( void ) {
 }
 
 void bma_read_config( void ) {
-    if ( SPIFFS.exists( BMA_JSON_COFIG_FILE ) ) {        
-        fs::File file = SPIFFS.open( BMA_JSON_COFIG_FILE, FILE_READ );
-        if (!file) {
-            log_e("Can't open file: %s!", BMA_JSON_COFIG_FILE );
-        }
-        else {
-            int filesize = file.size();
-            SpiRamJsonDocument doc( filesize * 2 );
-
-            DeserializationError error = deserializeJson( doc, file );
-            if ( error ) {
-                log_e("update check deserializeJson() failed: %s", error.c_str() );
-            }
-            else {
-                bma_config[ BMA_STEPCOUNTER ].enable = doc["stepcounter"] | true;
-                bma_config[ BMA_DOUBLECLICK ].enable = doc["doubleclick"] | true;
-                bma_config[ BMA_TILT ].enable = doc["tilt"] | false;
-            }        
-            doc.clear();
-        }
-        file.close();
+    fs::File file = SPIFFS.open( BMA_JSON_COFIG_FILE, FILE_READ );
+    if (!file) {
+        log_e("Can't open file: %s!", BMA_JSON_COFIG_FILE );
     }
     else {
-        log_i("no json config exists, read from binary");
-        fs::File file = SPIFFS.open( BMA_COFIG_FILE, FILE_READ );
+        int filesize = file.size();
+        SpiRamJsonDocument doc( filesize * 2 );
 
-        if (!file) {
-            log_e("Can't open file: %s!", BMA_COFIG_FILE );
+        DeserializationError error = deserializeJson( doc, file );
+        if ( error ) {
+            log_e("update check deserializeJson() failed: %s", error.c_str() );
         }
         else {
-            int filesize = file.size();
-            if ( filesize > sizeof( bma_config ) ) {
-                log_e("Failed to read configfile. Wrong filesize!" );
-            }
-            else {
-                file.read( (uint8_t *)bma_config, filesize );
-                file.close();
-                bma_save_config();
-                return; 
-            }
-        file.close();
-        }
+            bma_config[ BMA_STEPCOUNTER ].enable = doc["stepcounter"] | true;
+            bma_config[ BMA_DOUBLECLICK ].enable = doc["doubleclick"] | true;
+            bma_config[ BMA_TILT ].enable = doc["tilt"] | false;
+            bma_config[ BMA_DAILY_STEPCOUNTER ].enable = doc["daily_stepcounter"] | false;
+        }        
+        doc.clear();
     }
+    file.close();
 }
 
 bool bma_get_config( int config ) {

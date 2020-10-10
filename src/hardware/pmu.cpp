@@ -12,7 +12,7 @@
 
 #include "gui/statusbar.h"
 
-static bool firstlooprun = true;
+static bool pmu_update = true;
 volatile bool DRAM_ATTR pmu_irq_flag = false;
 portMUX_TYPE DRAM_ATTR PMU_IRQ_Mux = portMUX_INITIALIZER_UNLOCKED;
 
@@ -22,6 +22,7 @@ pmu_config_t pmu_config;
 void IRAM_ATTR pmu_irq( void );
 bool pmu_powermgm_event_cb( EventBits_t event, void *arg );
 bool pmu_powermgm_loop_cb( EventBits_t event, void *arg );
+bool pmu_blectl_event_cb( EventBits_t event, void *arg );
 bool pmu_send_cb( EventBits_t event, void *arg );
 
 void pmu_setup( void ) {
@@ -67,6 +68,7 @@ void pmu_setup( void ) {
 
     powermgm_register_cb( POWERMGM_SILENCE_WAKEUP | POWERMGM_STANDBY | POWERMGM_WAKEUP, pmu_powermgm_event_cb, "pmu" );
     powermgm_register_loop_cb( POWERMGM_SILENCE_WAKEUP | POWERMGM_STANDBY | POWERMGM_WAKEUP , pmu_powermgm_loop_cb, "pmu loop" );
+    blectl_register_cb( BLECTL_CONNECT, pmu_blectl_event_cb, "pmu blectl" );
 }
 
 bool pmu_powermgm_loop_cb( EventBits_t event, void *arg ) {
@@ -79,10 +81,17 @@ bool pmu_powermgm_event_cb( EventBits_t event, void *arg ) {
         case POWERMGM_STANDBY:          pmu_standby();
                                         break;
         case POWERMGM_WAKEUP:           pmu_wakeup();
-                                        firstlooprun = true;
                                         break;
         case POWERMGM_SILENCE_WAKEUP:   pmu_wakeup();
                                         break;
+    }
+    return( true );
+}
+
+bool pmu_blectl_event_cb( EventBits_t event, void *arg ) {
+    switch( event ) {
+        case BLECTL_CONNECT:
+            pmu_update = true;
     }
     return( true );
 }
@@ -136,26 +145,29 @@ void pmu_loop( void ) {
         bool charging = ttgo->power->isChargeing();
         pmu_send_cb( PMUCTL_VBUS_PLUG, (void *)&plug );
         pmu_send_cb( PMUCTL_CHARGING, (void *)&charging );
+        pmu_update = true;
     }
 
-    if ( !powermgm_get_event( POWERMGM_STANDBY ) ) {
-        if ( nextmillis < millis() ) {
-            nextmillis = millis() + 1000;
-            if ( pmu_get_battery_percent() != percent ) {
-                percent = pmu_get_battery_percent();
-                pmu_send_cb( PMUCTL_BATTERY_PERCENT, (void*)&percent );
-            }
+    if ( nextmillis < millis() ) {
+        nextmillis = millis() + 1000;
+        if ( pmu_get_battery_percent() != percent ) {
+            pmu_update = true;
         }
     }
 
-    if ( firstlooprun ) {
-        int32_t percent = pmu_get_battery_percent();
+    if ( pmu_update ) {
+
+        char msg[64]="";
+        percent = pmu_get_battery_percent();
+        snprintf( msg, sizeof(msg), "\r\n{t:\"status\", bat:%d}\r\n", percent );
+        blectl_send_msg( msg );
+
         bool plug = ttgo->power->isVBUSPlug();
         bool charging = ttgo->power->isChargeing();
         pmu_send_cb( PMUCTL_BATTERY_PERCENT, (void*)&percent );
-        pmu_send_cb( PMUCTL_VBUS_PLUG, (void*)&plug );
         pmu_send_cb( PMUCTL_CHARGING, (void*)&charging );
-        firstlooprun = false;
+        pmu_send_cb( PMUCTL_VBUS_PLUG, (void*)&plug );
+        pmu_update = false;
     }
 }
 
@@ -180,12 +192,12 @@ void pmu_standby( void ) {
     ttgo->power->clearTimerStatus();
     if ( pmu_get_silence_wakeup() ) {
         if ( ttgo->power->isChargeing() || ttgo->power->isVBUSPlug() ) {
-            ttgo->power->setTimer( pmu_config.silence_wakeup_time_vbplug );
-            log_i("enable silence wakeup timer, %dmin", pmu_config.silence_wakeup_time_vbplug );
+            ttgo->power->setTimer( pmu_config.silence_wakeup_interval_vbplug );
+            log_i("enable silence wakeup timer, %dmin", pmu_config.silence_wakeup_interval_vbplug );
         }
         else {
-            ttgo->power->setTimer( pmu_config.silence_wakeup_time );
-            log_i("enable silence wakeup timer, %dmin", pmu_config.silence_wakeup_time );
+            ttgo->power->setTimer( pmu_config.silence_wakeup_interval );
+            log_i("enable silence wakeup timer, %dmin", pmu_config.silence_wakeup_interval );
         }
     }
 
@@ -219,14 +231,11 @@ void pmu_wakeup( void ) {
     ttgo->power->offTimer();
 
     ttgo->power->setPowerOutPut( AXP202_LDO2, AXP202_ON );
+
+    pmu_update = true;
 }
 
 void pmu_save_config( void ) {
-    if ( SPIFFS.exists( PMU_CONFIG_FILE ) ) {
-        SPIFFS.remove( PMU_CONFIG_FILE );
-        log_i("remove old binary pmu config");
-    }
-    
     fs::File file = SPIFFS.open( PMU_JSON_CONFIG_FILE, FILE_WRITE );
 
     if (!file) {
@@ -236,8 +245,8 @@ void pmu_save_config( void ) {
         SpiRamJsonDocument doc( 3000 );
 
         doc["silence_wakeup"] = pmu_config.silence_wakeup;
-        doc["silence_wakeup_time"] = pmu_config.silence_wakeup_time;
-        doc["silence_wakeup_time_vbplug"] = pmu_config.silence_wakeup_time_vbplug;
+        doc["silence_wakeup_interval"] = pmu_config.silence_wakeup_interval;
+        doc["silence_wakeup_interval_vbplug"] = pmu_config.silence_wakeup_interval_vbplug;
         doc["experimental_power_save"] = pmu_config.experimental_power_save;
         doc["normal_voltage"] = pmu_config.normal_voltage;
         doc["normal_power_save_voltage"] = pmu_config.normal_power_save_voltage;
@@ -256,61 +265,62 @@ void pmu_save_config( void ) {
 }
 
 void pmu_read_config( void ) {
-    if ( SPIFFS.exists( PMU_JSON_CONFIG_FILE ) ) {        
-        fs::File file = SPIFFS.open( PMU_JSON_CONFIG_FILE, FILE_READ );
-        if (!file) {
-            log_e("Can't open file: %s!", PMU_JSON_CONFIG_FILE );
-        }
-        else {
-            int filesize = file.size();
-            SpiRamJsonDocument doc( filesize * 2 );
+    fs::File file = SPIFFS.open( PMU_JSON_CONFIG_FILE, FILE_READ );
 
-            DeserializationError error = deserializeJson( doc, file );
-            if ( error ) {
-                log_e("update check deserializeJson() failed: %s", error.c_str() );
-            }
-            else {
-                pmu_config.silence_wakeup = doc["silence_wakeup"] | false;
-                pmu_config.silence_wakeup_time = doc["silence_wakeup_time"] | SILENCEWAKEUPTIME;
-                pmu_config.silence_wakeup_time_vbplug = doc["silence_wakeup_time_vbplug"] | SILENCEWAKEUPTIME_PLUG;
-                pmu_config.experimental_power_save = doc["experimental_power_save"] | false;
-                pmu_config.compute_percent = doc["compute_percent"] | false;
-                pmu_config.high_charging_target_voltage = doc["high_charging_target_voltage"] | false;
-                pmu_config.designed_battery_cap = doc["designed_battery_cap"] | 300;
-                pmu_config.normal_voltage = doc["normal_voltage"] | NORMALVOLTAGE;
-                pmu_config.normal_power_save_voltage = doc["normal_power_save_voltage"] | NORMALPOWERSAVEVOLTAGE;
-                pmu_config.experimental_normal_voltage = doc["experimental_normal_voltage"] | EXPERIMENTALNORMALVOLTAGE;
-                pmu_config.experimental_power_save_voltage = doc["experimental_power_save_voltage"] | EXPERIMENTALPOWERSAVEVOLTAGE;
-            }        
-            doc.clear();
-        }
-        file.close();
+    if (!file) {
+        log_e("Can't open file: %s!", PMU_JSON_CONFIG_FILE );
     }
     else {
-        log_i("no json config exists, read from binary");
-        fs::File file = SPIFFS.open( PMU_CONFIG_FILE, FILE_READ );
+        int filesize = file.size();
+        SpiRamJsonDocument doc( filesize * 2 );
 
-        if (!file) {
-            log_e("Can't open file: %s!", PMU_CONFIG_FILE );
+        DeserializationError error = deserializeJson( doc, file );
+        if ( error ) {
+            log_e("update check deserializeJson() failed: %s", error.c_str() );
         }
         else {
-            int filesize = file.size();
-            if ( filesize > sizeof( pmu_config ) ) {
-                log_e("Failed to read configfile. Wrong filesize!" );
-            }
-            else {
-                file.read( (uint8_t *)&pmu_config, filesize );
-                file.close();
-                pmu_save_config();
-                return;                
-            }
-            file.close();
-        }
+            pmu_config.silence_wakeup = doc["silence_wakeup"] | false;
+            pmu_config.silence_wakeup_interval = doc["silence_wakeup_interval"] | SILENCEWAKEINTERVAL;
+            pmu_config.silence_wakeup_interval_vbplug = doc["silence_wakeup_interval_vbplug"] | SILENCEWAKEINTERVAL_PLUG;
+            pmu_config.experimental_power_save = doc["experimental_power_save"] | false;
+            pmu_config.compute_percent = doc["compute_percent"] | false;
+            pmu_config.high_charging_target_voltage = doc["high_charging_target_voltage"] | false;
+            pmu_config.designed_battery_cap = doc["designed_battery_cap"] | 300;
+            pmu_config.normal_voltage = doc["normal_voltage"] | NORMALVOLTAGE;
+            pmu_config.normal_power_save_voltage = doc["normal_power_save_voltage"] | NORMALPOWERSAVEVOLTAGE;
+            pmu_config.experimental_normal_voltage = doc["experimental_normal_voltage"] | EXPERIMENTALNORMALVOLTAGE;
+            pmu_config.experimental_power_save_voltage = doc["experimental_power_save_voltage"] | EXPERIMENTALPOWERSAVEVOLTAGE;
+        }        
+        doc.clear();
     }
+    file.close();
 }
 
 bool pmu_get_silence_wakeup( void ) {
     return( pmu_config.silence_wakeup );
+}
+
+bool pmu_get_high_charging_target_voltage( void ) {
+    return( pmu_config.high_charging_target_voltage );
+}
+
+void pmu_set_high_charging_target_voltage( bool value ) {
+    TTGOClass *ttgo = TTGOClass::getWatch();
+
+    pmu_config.high_charging_target_voltage = value;
+
+    if ( pmu_config.high_charging_target_voltage ) {
+        log_i("set target voltage to 4.36V");
+        if ( ttgo->power->setChargingTargetVoltage( AXP202_TARGET_VOL_4_36V ) )
+            log_e("target voltage 4.36V set failed!");
+    }
+    else {
+        log_i("set target voltage to 4.2V");
+        if ( ttgo->power->setChargingTargetVoltage( AXP202_TARGET_VOL_4_2V ) )
+            log_e("target voltage 4.2V set failed!");
+    }
+
+    pmu_save_config();
 }
 
 int32_t pmu_get_designed_battery_cap( void ) {

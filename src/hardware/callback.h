@@ -21,21 +21,36 @@
 #ifndef _CALLBACK_H
     #define _CALLBACK_H
 
-    #include "config.h"
+    #include <stdint.h>
 
+    /**
+     * @brief typedef for the callback function call
+     * 
+     * @param event     event mask
+     * @param arg       void pointer to an argument
+     * 
+     * @return          true if success or false if failed
+     */
     typedef bool ( * CALLBACK_FUNC ) ( EventBits_t event, void *arg );
 
+    /**
+     * @brief callback table entry structure
+     */
     typedef struct {
-        EventBits_t event;
-        CALLBACK_FUNC callback_func;
-        const char *id;
-        uint64_t counter;
+        EventBits_t event;                  /** @brief event mask */
+        CALLBACK_FUNC callback_func;        /** @brief pointer to a callback function */
+        const char *id;                     /** @brief id for the callback */
+        uint64_t counter;                   /** @brief callback function call counter thair returned true */
     } callback_table_t;
 
-    typedef struct {
-        uint32_t entrys;
-        callback_table_t *table;
-        const char *name;
+    /**
+     * @brief callback structure
+     */
+    typedef struct callback_t {
+        uint32_t entrys;                    /** @brief count callback entrys */
+        callback_table_t *table;            /** @brief pointer to an callback table */
+        const char *name;                   /** @brief id for the callback structure */
+        callback_t *next_callback_t;
     } callback_t;
 
     /**
@@ -83,5 +98,6 @@
      * @param enable    true if logging enabled, false if logging disabled
      */
     void display_event_logging_enable( bool enable );
+    void callback_print( void );
 
 #endif // _CALLBACK_H

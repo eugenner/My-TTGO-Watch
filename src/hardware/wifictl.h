@@ -27,8 +27,6 @@
 
     #define WIFICTL_DELAY               10
     #define NETWORKLIST_ENTRYS          20
-    #define WIFICTL_LIST_FILE           "/wifilist.cfg"
-    #define WIFICTL_CONFIG_FILE         "/wificfg.cfg"
     #define WIFICTL_JSON_CONFIG_FILE    "/wificfg.json"
 
     #define ESP_WPS_MODE                WPS_TYPE_PBC
@@ -37,14 +35,21 @@
     #define ESP_MODEL_NAME              "LILYGO T-WATCH2020 V1"
     #define ESP_DEVICE_NAME             "ESP STATION"
 
+    /**
+     * @brief network list structure
+     */
     typedef struct {
         char ssid[64]="";
         char password[64]="";
     } networklist;
 
+    /**
+     * @brief wifictl config structure
+     */
     typedef struct {
-        bool autoon = true;
-        bool webserver = false;
+        bool autoon = true;             /** @brief enable on auto on/off an wakeup and standby */
+        bool webserver = false;         /** @brief enable on webserver */
+        bool enable_on_standby = false; /** @brief enable on standby */
     } wifictl_config_t;
 
     enum wifictl_event_t {
@@ -60,7 +65,8 @@
         WIFICTL_WPS_SUCCESS            = _BV(9),
         WIFICTL_WPS_FAILED             = _BV(10),
         WIFICTL_SCAN                   = _BV(11),
-        WIFICTL_FIRST_RUN              = _BV(12)
+        WIFICTL_FIRST_RUN              = _BV(12),
+        WIFICTL_AUTOON                 = _BV(13)
     };
 
     /**
@@ -156,5 +162,18 @@
      * @param   webserver   true means webserver enable, false means webserver disable
      */
     void wifictl_set_webserver( bool webserver );
+    /**
+     * @brief   set wifi enable on standby
+     * 
+     * @param   enable  true if wifi an standby enabled, false if not
+     */
+    void wifictl_set_enable_on_standby( bool enable );
+    /**
+     * @brief   get wifi enable on standby
+     * 
+     * @return  true means enabled, false means disabled
+     */
+    bool wifictl_get_enable_on_standby( void );
+
 
 #endif // _WIFICTL_H

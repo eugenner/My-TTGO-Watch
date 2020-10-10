@@ -24,11 +24,13 @@
 
     #include "TTGO.h"
 
-    #define MOTOR_CONFIG_FILE  "/motor.cfg"
-    #define MOTOR_JSON_CONFIG_FILE  "/motor.json"
+    #define MOTOR_JSON_CONFIG_FILE  "/motor.json"           /** @brief defines binary config file name */
 
+    /**
+     * @brief motor config structure in memory
+     */
     typedef struct {
-        bool vibe = true;
+        bool vibe = true;           /** @brief vibe config item, true if vibe enabled, false if disabled */
     } motor_config_t;
 
     /**
