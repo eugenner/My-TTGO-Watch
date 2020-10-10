@@ -145,6 +145,8 @@ void my_app_save_config( void ) {
         SpiRamJsonDocument doc( 1000 );
 
         doc["url"] = my_app_config.url;
+        doc["url2"] = my_app_config.url2;
+        doc["url3"] = my_app_config.url3;
 
         if ( serializeJsonPretty( doc, file ) == 0) {
             log_e("Failed to write config file");
@@ -172,7 +174,16 @@ void my_app_load_config( void ) {
                 log_e("update check deserializeJson() failed: %s", error.c_str() );
             }
             else {
-                strlcpy( my_app_config.url, doc["url"], sizeof( my_app_config.url) );
+
+                log_i("doc: url: %s, url2: %s, url3: %s ",  doc["url"], doc["url2"], doc["url3"]);
+
+                if(doc.containsKey("url"))
+                    strlcpy( my_app_config.url, doc["url"], sizeof( my_app_config.url) );
+                if(doc.containsKey("url2"))
+                    strlcpy( my_app_config.url2, doc["url2"], sizeof( my_app_config.url2) );
+                if(doc.containsKey("url3"))
+                    strlcpy( my_app_config.url3, doc["url3"], sizeof( my_app_config.url3) );
+
             }        
             doc.clear();
         }

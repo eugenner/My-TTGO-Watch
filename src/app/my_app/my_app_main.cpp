@@ -21,6 +21,9 @@
  */
 #include "config.h"
 #include <TTGO.h>
+#include <hardware/wifictl.h>
+#include <WiFi.h>
+
 
 #include "HTTPClient.h"
 
@@ -132,13 +135,14 @@ void my_app_main_setup( uint32_t tile_num ) {
     lv_obj_set_style_local_text_font(command_textfield, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, &Ubuntu_16px);
 
     lv_textarea_set_pwd_mode( command_textfield, false);
-    lv_textarea_set_one_line( command_textfield, true);
+    lv_textarea_set_one_line( command_textfield, false);
     lv_textarea_set_cursor_hidden( command_textfield, true);
     lv_obj_set_width( command_textfield, LV_HOR_RES);
-    // lv_obj_set_height( command_textfield, LV_VER_RES / 3 );
 
     // lv_obj_align( command_textfield, my_app_main_tile, LV_ALIGN_CENTER, 0, 50 );
-    lv_obj_align( command_textfield, my_app_main_tile, LV_ALIGN_IN_BOTTOM_LEFT, 10, -50 );
+    lv_obj_set_height( command_textfield, LV_VER_RES / 3 );
+    lv_obj_align( command_textfield, command_btn, LV_ALIGN_IN_TOP_LEFT, -10, 70 );
+    
 
     // lv_obj_set_event_cb( command_textfield, crypto_ticker_textarea_event_cb );
 
@@ -151,6 +155,12 @@ static void command_btn_event_cb( lv_obj_t * obj, lv_event_t event ) {
         case( LV_EVENT_CLICKED ):       
                                         int btnNo = lv_obj_get_user_data(obj);
                                         log_i("command_btn clicked %i", btnNo);
+                                        log_i("WIFI status %i", WiFi.status());
+                                        if(WiFi.status()  != WL_CONNECTED) {
+                                            lv_textarea_set_text( command_textfield, "check WIFI" );
+                                            return;
+                                        }
+
                                         my_app_config_t * my_app_config = my_app_get_config();
                                         HTTPClient http_client;
                                         int httpcode = -1;
