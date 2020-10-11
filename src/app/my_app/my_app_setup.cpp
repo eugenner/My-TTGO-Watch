@@ -22,12 +22,15 @@
 #include "config.h"
 #include <TTGO.h>
 
+#include "hardware/wifictl.h"
+
 #include "my_app.h"
 #include "my_app_setup.h"
 
 #include "gui/mainbar/mainbar.h"
 #include "gui/statusbar.h"
 #include "gui/keyboard.h"
+
 
 lv_obj_t *my_app_setup_tile = NULL;
 lv_style_t my_app_setup_style;
@@ -42,6 +45,14 @@ LV_IMG_DECLARE(exit_32px);
 static void exit_my_app_setup_event_cb( lv_obj_t * obj, lv_event_t event );
 static void my_app_foobar_switch_event_cb( lv_obj_t * obj, lv_event_t event );
 static void my_app_textarea_event_cb( lv_obj_t * obj, lv_event_t event );
+
+static bool wifi_connect = false;
+
+// static bool get_wifi_connect(void);
+
+bool check_wifictl_event_cb( EventBits_t event, void *arg );
+
+
 
 void my_app_setup_setup( uint32_t tile_num ) {
 
@@ -137,7 +148,12 @@ void my_app_setup_setup( uint32_t tile_num ) {
     // lv_obj_align( url_textarea3, my_app_setup_tile, LV_ALIGN_IN_TOP_MID, 0, 170 );
     lv_obj_align( url_textarea3, my_app_foobar_switch_label3, LV_ALIGN_IN_TOP_LEFT, 0, 20 );
     lv_obj_set_event_cb( url_textarea3, my_app_textarea_event_cb );       
+
+    // register callback in your setup function
+    // wifictl_register_cb( WIFICTL_CONNECT | WIFICTL_DISCONNECT, check_wifictl_event_cb, "check wifi" );
+
 }
+
 
 static void my_app_foobar_switch_event_cb( lv_obj_t * obj, lv_event_t event ) {
     switch( event ) {
@@ -165,4 +181,21 @@ static void exit_my_app_setup_event_cb( lv_obj_t * obj, lv_event_t event ) {
                                         mainbar_jump_to_tilenumber( my_app_get_app_main_tile_num(), LV_ANIM_ON );
                                         break;
     }
+}
+
+bool check_wifictl_event_cb( EventBits_t event, void *arg ) {
+        switch( event ) {
+                case WIFICTL_CONNECT:
+                wifi_connect = true;  
+            break;
+                case WIFICTL_DISCONNECT:
+                wifi_connect = false;  
+            break;
+        }
+        log_i("event: wifi_connect: %s", wifi_connect);
+    return( true );
+}
+
+bool get_wifi_connect(void) {
+    return wifi_connect;
 }

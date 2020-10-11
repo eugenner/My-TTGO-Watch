@@ -30,6 +30,8 @@
 #include "my_app.h"
 #include "my_app_main.h"
 
+#include "my_app_setup.h"
+
 #include "gui/mainbar/app_tile/app_tile.h"
 #include "gui/mainbar/main_tile/main_tile.h"
 #include "gui/mainbar/mainbar.h"
@@ -155,11 +157,17 @@ static void command_btn_event_cb( lv_obj_t * obj, lv_event_t event ) {
         case( LV_EVENT_CLICKED ):       
                                         int btnNo = lv_obj_get_user_data(obj);
                                         log_i("command_btn clicked %i", btnNo);
-                                        log_i("WIFI status %i", WiFi.status());
-                                        if(WiFi.status()  != WL_CONNECTED) {
+                                        
+                                        if(get_wifi_connect()) {
+                                            log_i("WIFI connected");
+                                        } else {
+                                            log_i("WIFI is not connected");
                                             lv_textarea_set_text( command_textfield, "check WIFI" );
-                                            return;
                                         }
+                                        // if(WiFi.status()  != WL_CONNECTED) {
+                                        //     lv_textarea_set_text( command_textfield, "check WIFI" );
+                                        //     return;
+                                        // }
 
                                         my_app_config_t * my_app_config = my_app_get_config();
                                         HTTPClient http_client;

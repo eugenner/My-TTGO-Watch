@@ -47,6 +47,7 @@ icon_t *my_widget = NULL;
 
 // declare you images or fonts you need
 LV_IMG_DECLARE(my_app_64px);
+LV_IMG_DECLARE(r_app);
 LV_IMG_DECLARE(info_1_16px);
 
 // declare callback functions for the app and widget icon to enter the app
@@ -69,7 +70,7 @@ void my_app_setup( void ) {
     // remember, an app icon must have an size of 64x64 pixel with an alpha channel
     // use https://lvgl.io/tools/imageconverter to convert your images and set "true color with alpha" to get fancy images
     // the resulting c-file can put in /app/examples/images/ and declare it like LV_IMG_DECLARE( your_icon );
-    my_app = app_register( "myapp", &my_app_64px, enter_my_app_event_cb );
+    my_app = app_register( "myapp", &r_app, enter_my_app_event_cb );
     app_set_indicator( my_app, ICON_INDICATOR_OK );
 
 #ifdef MY_WIDGET
@@ -78,7 +79,7 @@ void my_app_setup( void ) {
     // remember, an widget icon must have an max size of 64x64 pixel
     // use https://lvgl.io/tools/imageconverter to convert your images and set "true color with alpha" to get fancy images
     // the resulting c-file can put in /app/examples/images/ and declare it like LV_IMG_DECLARE( your_icon );
-    my_widget = widget_register( "my wdg", &my_app_64px, enter_my_widget_event_cb );
+    my_widget = widget_register( "my wdg", &r_app, enter_my_widget_event_cb );
     widget_set_indicator( my_widget, ICON_INDICATOR_UPDATE );
 #endif // MY_WIDGET
 
