@@ -74,10 +74,9 @@ void my_app_setup( void ) {
     // use https://lvgl.io/tools/imageconverter to convert your images and set "true color with alpha" to get fancy images
     // the resulting c-file can put in /app/examples/images/ and declare it like LV_IMG_DECLARE( your_icon );
     my_app = app_register( "R123", &r_app, enter_my_app_event_cb );
-    app_set_indicator( my_app, ICON_INDICATOR_OK );
-
+    app_hide_indicator(my_app);
     // register callback in your setup function
-    wifictl_register_cb( 0xF, check_wifictl_event_cb, "check wifi" );
+    wifictl_register_cb( WIFICTL_CONNECT | WIFICTL_OFF, check_wifictl_event_cb, "check wifi" );
 
 
 #ifdef MY_WIDGET
@@ -87,7 +86,7 @@ void my_app_setup( void ) {
     // use https://lvgl.io/tools/imageconverter to convert your images and set "true color with alpha" to get fancy images
     // the resulting c-file can put in /app/examples/images/ and declare it like LV_IMG_DECLARE( your_icon );
     my_widget = widget_register( "", &r_app, enter_my_widget_event_cb );
-    widget_set_indicator( my_widget, ICON_INDICATOR_UPDATE );
+    widget_hide_indicator(my_widget);
 #endif // MY_WIDGET
 
     // init main and setup tile, see my_app_main.cpp and my_app_setup.cpp
@@ -115,7 +114,6 @@ uint32_t my_app_get_app_setup_tile_num( void ) {
 static void enter_my_app_event_cb( lv_obj_t * obj, lv_event_t event ) {
     switch( event ) {
         case( LV_EVENT_CLICKED ):       statusbar_hide( true );
-                                        app_hide_indicator( my_app );
                                         mainbar_jump_to_tilenumber( my_app_main_tile_num, LV_ANIM_OFF );
                                         break;
     }    
@@ -127,7 +125,6 @@ static void enter_my_app_event_cb( lv_obj_t * obj, lv_event_t event ) {
 static void enter_my_widget_event_cb( lv_obj_t * obj, lv_event_t event ) {
     switch( event ) {
         case( LV_EVENT_CLICKED ):       statusbar_hide( true );
-                                        widget_hide_indicator( my_widget );
                                         mainbar_jump_to_tilenumber( my_app_main_tile_num, LV_ANIM_OFF );
                                         break;
     }    
@@ -206,12 +203,15 @@ bool check_wifictl_event_cb( EventBits_t event, void *arg ) {
             wifi_connect = true;  
             log_i("my app check_wifictl_event_cb: WIFICTL_CONNECT");
             break;
+        case WIFICTL_OFF:
+            wifi_connect = false;  
+            log_i("my app check_wifictl_event_cb: WIFICTL_OFF");
+            break;
         case WIFICTL_DISCONNECT:
             wifi_connect = false;  
             log_i("my app check_wifictl_event_cb: WIFICTL_DISCONNECT");
             break;
     }
-    
     return( true );
 }
 

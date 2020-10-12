@@ -25,6 +25,5 @@
     #include <TTGO.h>
 
     void my_app_main_setup( uint32_t tile_num );
-    // bool get_wifi_connect(void);
 
 #endif // _MY_APP_MAIN_H

@@ -98,7 +98,6 @@ void my_app_main_setup( uint32_t tile_num ) {
     lv_obj_set_size(command_btn, 50, 50);
     lv_obj_set_style_local_radius(command_btn, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, 20);
     lv_obj_add_style(command_btn, LV_BTN_PART_MAIN, mainbar_get_button_style() );
-    // lv_obj_align( command_btn, NULL, LV_ALIGN_CENTER, -80, -30 );
     lv_obj_align( command_btn, NULL, LV_ALIGN_IN_TOP_LEFT, 10, 30 );
 
     lv_obj_set_event_cb( command_btn, command_btn_event_cb );
@@ -111,7 +110,6 @@ void my_app_main_setup( uint32_t tile_num ) {
     lv_obj_set_size(command_btn2, 50, 50);
     lv_obj_set_style_local_radius(command_btn2, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, 20);
     lv_obj_add_style(command_btn2, LV_BTN_PART_MAIN, mainbar_get_button_style() );
-    // lv_obj_align( command_btn, NULL, LV_ALIGN_CENTER, -80, -30 );
     lv_obj_align( command_btn2, NULL, LV_ALIGN_IN_TOP_LEFT, LV_HOR_RES / 2 - 25, 30);
 
     lv_obj_set_event_cb( command_btn2, command_btn_event_cb );
@@ -124,7 +122,6 @@ void my_app_main_setup( uint32_t tile_num ) {
     lv_obj_set_size(command_btn3, 50, 50);
     lv_obj_set_style_local_radius(command_btn3, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, 20);
     lv_obj_add_style(command_btn3, LV_BTN_PART_MAIN, mainbar_get_button_style() );
-    // lv_obj_align( command_btn, NULL, LV_ALIGN_CENTER, -80, -30 );
     lv_obj_align( command_btn3, NULL, LV_ALIGN_IN_TOP_LEFT, LV_HOR_RES - 60, 30);
 
     lv_obj_set_event_cb( command_btn3, command_btn_event_cb );
@@ -141,13 +138,9 @@ void my_app_main_setup( uint32_t tile_num ) {
     lv_textarea_set_cursor_hidden( command_textfield, true);
     lv_obj_set_width( command_textfield, LV_HOR_RES);
 
-    // lv_obj_align( command_textfield, my_app_main_tile, LV_ALIGN_CENTER, 0, 50 );
     lv_obj_set_height( command_textfield, LV_VER_RES / 3 );
     lv_obj_align( command_textfield, command_btn, LV_ALIGN_IN_TOP_LEFT, -10, 70 );
     
-
-    // lv_obj_set_event_cb( command_textfield, crypto_ticker_textarea_event_cb );
-
     // create an task that runs every secound
     _my_app_task = lv_task_create( my_app_task, 1000, LV_TASK_PRIO_MID, NULL );
 
@@ -164,11 +157,8 @@ void command_btn_event_cb( lv_obj_t * obj, lv_event_t event ) {
                                         } else {
                                             log_i("WIFI is not connected");
                                             lv_textarea_set_text( command_textfield, "check WIFI" );
+                                            return;
                                         }
-                                        // if(WiFi.status()  != WL_CONNECTED) {
-                                        //     lv_textarea_set_text( command_textfield, "check WIFI" );
-                                        //     return;
-                                        // }
 
                                         my_app_config_t * my_app_config = my_app_get_config();
                                         HTTPClient http_client;
