@@ -21,8 +21,6 @@
  */
 #include "config.h"
 #include <TTGO.h>
-#include <hardware/wifictl.h>
-#include <WiFi.h>
 
 
 #include "HTTPClient.h"
@@ -37,6 +35,7 @@
 #include "gui/mainbar/mainbar.h"
 #include "gui/statusbar.h"
 #include "hardware/json_psram_allocator.h"
+
 
 
 lv_obj_t *my_app_main_tile = NULL;
@@ -58,6 +57,7 @@ static void enter_my_app_setup_event_cb( lv_obj_t * obj, lv_event_t event );
 static void command_btn_event_cb( lv_obj_t * obj, lv_event_t event );
 
 void my_app_task( lv_task_t * task );
+
 
 void my_app_main_setup( uint32_t tile_num ) {
 
@@ -150,9 +150,10 @@ void my_app_main_setup( uint32_t tile_num ) {
 
     // create an task that runs every secound
     _my_app_task = lv_task_create( my_app_task, 1000, LV_TASK_PRIO_MID, NULL );
+
 }
 
-static void command_btn_event_cb( lv_obj_t * obj, lv_event_t event ) {
+void command_btn_event_cb( lv_obj_t * obj, lv_event_t event ) {
     switch( event ) {
         case( LV_EVENT_CLICKED ):       
                                         int btnNo = lv_obj_get_user_data(obj);
@@ -239,3 +240,6 @@ static void exit_my_app_main_event_cb( lv_obj_t * obj, lv_event_t event ) {
 void my_app_task( lv_task_t * task ) {
     // put your code her
 }
+
+
+

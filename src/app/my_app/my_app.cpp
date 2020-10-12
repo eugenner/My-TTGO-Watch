@@ -32,6 +32,7 @@
 #include "gui/widget.h"
 
 #include "hardware/json_psram_allocator.h"
+#include <hardware/wifictl.h>
 
 my_app_config_t my_app_config;
 
@@ -53,6 +54,8 @@ LV_IMG_DECLARE(info_1_16px);
 // declare callback functions for the app and widget icon to enter the app
 static void enter_my_app_event_cb( lv_obj_t * obj, lv_event_t event );
 static void enter_my_widget_event_cb( lv_obj_t * obj, lv_event_t event );
+static bool wifi_connect = false;
+bool check_wifictl_event_cb( EventBits_t event, void *arg );
 
 void my_app_load_config( void );
 /*
@@ -70,8 +73,12 @@ void my_app_setup( void ) {
     // remember, an app icon must have an size of 64x64 pixel with an alpha channel
     // use https://lvgl.io/tools/imageconverter to convert your images and set "true color with alpha" to get fancy images
     // the resulting c-file can put in /app/examples/images/ and declare it like LV_IMG_DECLARE( your_icon );
-    my_app = app_register( "myapp", &r_app, enter_my_app_event_cb );
+    my_app = app_register( "R123", &r_app, enter_my_app_event_cb );
     app_set_indicator( my_app, ICON_INDICATOR_OK );
+
+    // register callback in your setup function
+    wifictl_register_cb( 0xF, check_wifictl_event_cb, "check wifi" );
+
 
 #ifdef MY_WIDGET
     // register widget icon on the main tile
@@ -79,7 +86,7 @@ void my_app_setup( void ) {
     // remember, an widget icon must have an max size of 64x64 pixel
     // use https://lvgl.io/tools/imageconverter to convert your images and set "true color with alpha" to get fancy images
     // the resulting c-file can put in /app/examples/images/ and declare it like LV_IMG_DECLARE( your_icon );
-    my_widget = widget_register( "my wdg", &r_app, enter_my_widget_event_cb );
+    my_widget = widget_register( "", &r_app, enter_my_widget_event_cb );
     widget_set_indicator( my_widget, ICON_INDICATOR_UPDATE );
 #endif // MY_WIDGET
 
@@ -191,4 +198,23 @@ void my_app_load_config( void ) {
         file.close();
     }
 
+}
+
+bool check_wifictl_event_cb( EventBits_t event, void *arg ) {   
+    switch( event ) {
+        case WIFICTL_CONNECT:
+            wifi_connect = true;  
+            log_i("my app check_wifictl_event_cb: WIFICTL_CONNECT");
+            break;
+        case WIFICTL_DISCONNECT:
+            wifi_connect = false;  
+            log_i("my app check_wifictl_event_cb: WIFICTL_DISCONNECT");
+            break;
+    }
+    
+    return( true );
+}
+
+boolean get_wifi_connect(void) {
+    return wifi_connect;
 }

@@ -98,12 +98,13 @@ void setup()
     /*
      * add apps and widgets here!!!
      */
+    my_app_setup();
     weather_app_setup();
     stopwatch_app_setup();
     alarm_clock_setup();
     crypto_ticker_setup();
-    example_app_setup();
-    my_app_setup();
+    // example_app_setup();
+
     osmand_app_setup();
     IRController_setup();
     powermeter_app_setup();

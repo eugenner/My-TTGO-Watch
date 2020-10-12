@@ -42,4 +42,6 @@
     uint32_t my_app_get_app_main_tile_num( void );
 
     void my_app_save_config( void );
+    boolean get_wifi_connect(void);
+
 #endif // _MY_APP_H
